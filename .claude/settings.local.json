@@ -11,7 +11,9 @@
       "Bash(uv sync:*)",
       "Bash(pip index:*)",
       "Bash(uv run:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

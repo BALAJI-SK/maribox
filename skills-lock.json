@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "marimo-notebook": {
+      "source": "marimo-team/skills",
+      "sourceType": "github",
+      "computedHash": "9ae1f29694a66878376f1013104e25395722f14771380bd51dcf33c251dc8ece"
+    },
+    "uv-package-manager": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "3aaa4f0a3d50061e023783236866b97f326cd1fef7f27166893c302a1a3c04fa"
+    }
+  }
+}
