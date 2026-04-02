@@ -1,0 +1,52 @@
+Screen {
+    background: $surface;
+}
+
+Header {
+    background: $primary;
+}
+
+Footer {
+    background: $primary-background;
+}
+
+#dashboard-grid {
+    layout: grid;
+    grid-size: 3 2;
+    grid-gutter: 1;
+    padding: 1;
+}
+
+SessionCard {
+    background: $panel;
+    border: round $primary;
+    padding: 1 2;
+    margin: 1;
+}
+
+.source-pane {
+    width: 1fr;
+    height: 1fr;
+    border: solid $primary-lighten-1;
+}
+
+.output-pane {
+    width: 1fr;
+    height: 1fr;
+    border: solid $success;
+}
+
+.agent-pane {
+    height: auto;
+    max-height: 20;
+    border: solid $accent;
+    padding: 0 1;
+}
+
+AgentFeed {
+    background: $surface;
+    border: solid $accent;
+    padding: 0 1;
+    height: auto;
+    max-height: 20;
+}

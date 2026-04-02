@@ -4,7 +4,14 @@
       "WebSearch",
       "Bash(mkdir -p D:/Pratheek/maribox/src/maribox)",
       "Bash(mkdir -p D:/Pratheek/maribox/tests)",
-      "Bash(mkdir -p D:/Pratheek/maribox/docs/planning)"
+      "Bash(mkdir -p D:/Pratheek/maribox/docs/planning)",
+      "Bash(python -m maribox --version)",
+      "Bash(pip install:*)",
+      "Bash(python -m maribox --help)",
+      "Bash(uv sync:*)",
+      "Bash(pip index:*)",
+      "Bash(uv run:*)",
+      "Bash(git add:*)"
     ]
   }
 }

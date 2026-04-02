@@ -1,0 +1,1 @@
+"""maribox configuration management."""
