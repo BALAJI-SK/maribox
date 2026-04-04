@@ -21,9 +21,6 @@ class AgentError(MariboxError):
     """Agent orchestration error."""
 
 
-class SandboxError(MariboxError):
-    """Sandbox container error."""
-
 
 class EncryptionError(MariboxError):
     """Encryption or decryption error."""

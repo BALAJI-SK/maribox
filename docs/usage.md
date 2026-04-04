@@ -103,7 +103,7 @@ Output shows masked keys and status per provider.
 
 ## Session Workflow
 
-Sessions are the core unit of work in maribox. Each session has its own sandbox container, marimo kernel, and notebook state.
+Sessions are the core unit of work in maribox. Each session has its own directory with marimo kernel state and notebook data.
 
 ### Create a session
 
@@ -131,7 +131,7 @@ Shows a table with session ID, name, status, provider, and creation time.
 maribox session attach a1b2c3d4e5f6
 ```
 
-Opens the full TUI connected to the session.
+Opens the TUI connected to the session.
 
 ### Stop or kill sessions
 
@@ -155,7 +155,7 @@ Saves the notebook source and execution logs.
 maribox session rm a1b2c3d4e5f6
 ```
 
-Deletes the session directory and releases sandbox resources.
+Deletes the session directory.
 
 ---
 
@@ -333,7 +333,7 @@ When you use the orchestrator (default), messages are routed by keyword analysis
 - **notebook**: "cell", "code", "write", "function", "import"
 - **ui**: "widget", "component", "slider", "table", "chart", "form"
 - **debug**: "error", "fix", "debug", "traceback", "exception"
-- **session**: "session", "sandbox", "start", "stop", "environment"
+- **session**: "session", "start", "stop", "environment"
 
 ---
 
@@ -397,33 +397,70 @@ Once configured, Claude Code can directly:
 ### Launch
 
 ```bash
-maribox tui                          # Dashboard with all sessions
+maribox tui                          # Chat interface
 maribox tui --session <session-id>   # Attached to a specific session
 ```
 
-### Screens
+### Interface Layout
 
-**Dashboard** — Grid of session cards showing ID, name, and status. Auto-refreshes to keep status current.
+The TUI follows an OpenCode-style design:
 
-**Session View** — Three-pane layout:
-- Left: Cell source code with syntax highlighting
-- Right: Cell output (stdout/stderr/errors)
-- Bottom: Agent activity feed
+```
++--------------------------------------------------+
+|  Messages List (left)          | Sidebar (right)  |
+|  - User/Assistant messages     | - Session info   |
+|  - Tool call outputs           | - Files          |
+|  - Welcome screen              | - Agents         |
++--------------------------------------------------+
+|  > Input area (multi-line)                       |
+|    Enter to send, \+Enter for newline            |
++--------------------------------------------------+
+|  [Ctrl+? help] [status] ... [tokens] [model]     |
++--------------------------------------------------+
+```
 
-**Agent Monitor** — Color-coded log of agent messages:
-- `orchestrator` (cyan) — routing decisions
-- `notebook` (green) — cell operations
-- `debug` (yellow) — error analysis
-- `ui` (magenta) — UI generation
-- `session` (blue) — session lifecycle
+### Components
+
+**Messages List** — Scrollable message feed with user messages (blue border), assistant messages (purple border), tool call outputs (muted border), and a thinking indicator.
+
+**Sidebar** (toggleable with `Ctrl+L`) — Shows session information (ID, status, provider, model), modified files list, and agent status.
+
+**Input Bar** — Multi-line text area at the bottom. `Enter` sends the message. `\+Enter` inserts a newline. `Ctrl+E` opens an external editor.
+
+**Status Bar** — Bottom row showing help hint, status messages, token usage, and current model name.
+
+### Dialogs
+
+| Dialog | Key | Description |
+|--------|-----|-------------|
+| Help | `Ctrl+?` | All key bindings in a modal overlay |
+| Command Palette | `Ctrl+K` | Filterable command list |
+| Session Switcher | `Ctrl+S` | Switch between conversations |
+| Model Selector | `Ctrl+O` | Pick provider and model (← → to switch provider) |
+| Quit | `Ctrl+C` | Confirmation dialog |
 
 ### Key bindings
 
 | Key | Action |
 |-----|--------|
-| `d` | Dashboard |
-| `a` | Agent monitor |
-| `q` | Quit |
+| `Enter` | Send message |
+| `\+Enter` | Insert newline |
+| `Ctrl+K` | Command palette |
+| `Ctrl+L` | Toggle sidebar |
+| `Ctrl+S` | Session switcher |
+| `Ctrl+O` | Model selector |
+| `Ctrl+N` | New session |
+| `Ctrl+?` / `Ctrl+H` | Help overlay |
+| `Ctrl+C` | Quit confirmation |
+| `Escape` | Cancel / close dialog |
+| `PageUp/PageDown` | Scroll messages |
+
+### Message Types
+
+- **User messages** — Displayed with a blue left border
+- **Assistant messages** — Purple left border, shows model name, duration, and token count
+- **Tool call messages** — Muted border, shows tool name, input/output, and status
+- **System messages** — Used for session info and command results
 
 ---
 
@@ -460,10 +497,6 @@ default_provider = "anthropic"
 default_model = "claude-sonnet-4-6"
 auto_open_browser = false
 log_level = "info"
-
-[sandbox]
-base_url = ""
-timeout_seconds = 300
 
 [marimo]
 port_range = [7000, 7100]

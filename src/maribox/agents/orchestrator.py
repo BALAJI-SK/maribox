@@ -13,7 +13,7 @@ _ROUTING_RULES: dict[str, list[str]] = {
     "notebook": ["cell", "code", "notebook", "variable", "function", "import", "class", "write", "create cell"],
     "ui": ["ui", "component", "widget", "form", "table", "chart", "layout", "button", "slider", "display"],
     "debug": ["error", "fix", "debug", "traceback", "exception", "bug", "fail", "broken", "wrong"],
-    "session": ["session", "sandbox", "start", "stop", "kill", "snapshot", "environment"],
+    "session": ["session", "start", "stop", "kill", "snapshot", "environment"],
 }
 
 

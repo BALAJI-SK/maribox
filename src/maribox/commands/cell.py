@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-import tomllib
 
 from rich import print as rprint
 
-from maribox.config.resolution import resolve_config_root
 from maribox.notebook.cell import CellId
 from maribox.notebook.runtime import MarimoRuntime
 
@@ -23,8 +21,7 @@ def _get_runtime(session_id: str) -> MarimoRuntime:
     with open(meta_path, "rb") as f:
         meta = tomllib.load(f)
 
-    sandbox_url = meta.get("sandbox_url", "")
-    return MarimoRuntime(sandbox_url=sandbox_url)
+    return MarimoRuntime()
 
 
 def _run(coro: object) -> object:

@@ -146,7 +146,7 @@ def session_new(
     provider: str | None = typer.Option(None, "--provider", help="AI provider."),
     model: str | None = typer.Option(None, "--model", help="AI model."),
 ) -> None:
-    """Create a new sandbox + marimo session."""
+    """Create a new notebook session."""
     from maribox.commands.session import session_new as _new
     _new(name=name, provider=provider, model=model)
 
@@ -199,7 +199,7 @@ def session_snapshot(
 def session_rm(
     session_id: str = typer.Argument(help="Session ID to remove."),
 ) -> None:
-    """Remove session directory and release sandbox."""
+    """Remove session directory."""
     from maribox.commands.session import session_rm as _rm
     _rm(session_id=session_id)
 

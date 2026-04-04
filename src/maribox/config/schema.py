@@ -36,24 +36,6 @@ class MariboxSection:
 
 
 @dataclass
-class SandboxSection:
-    """[sandbox] config section."""
-
-    base_url: str = ""
-    timeout_seconds: int = 300
-
-    @classmethod
-    def from_toml(cls, data: dict[str, object]) -> SandboxSection:
-        return cls(
-            base_url=str(data.get("base_url", cls.base_url)),
-            timeout_seconds=int(data.get("timeout_seconds", cls.timeout_seconds)),
-        )
-
-    def to_toml(self) -> dict[str, object]:
-        return {"base_url": self.base_url, "timeout_seconds": self.timeout_seconds}
-
-
-@dataclass
 class MarimoSection:
     """[marimo] config section."""
 
@@ -102,7 +84,6 @@ class MariboxConfig:
     """Top-level maribox configuration (config.toml)."""
 
     maribox: MariboxSection = field(default_factory=MariboxSection)
-    sandbox: SandboxSection = field(default_factory=SandboxSection)
     marimo: MarimoSection = field(default_factory=MarimoSection)
     tui: TuiSection = field(default_factory=TuiSection)
 
@@ -110,7 +91,6 @@ class MariboxConfig:
     def from_toml(cls, data: dict[str, dict[str, object]]) -> MariboxConfig:
         return cls(
             maribox=MariboxSection.from_toml(data.get("maribox", {})),
-            sandbox=SandboxSection.from_toml(data.get("sandbox", {})),
             marimo=MarimoSection.from_toml(data.get("marimo", {})),
             tui=TuiSection.from_toml(data.get("tui", {})),
         )
@@ -118,7 +98,6 @@ class MariboxConfig:
     def to_toml(self) -> dict[str, dict[str, object]]:
         return {
             "maribox": self.maribox.to_toml(),
-            "sandbox": self.sandbox.to_toml(),
             "marimo": self.marimo.to_toml(),
             "tui": self.tui.to_toml(),
         }

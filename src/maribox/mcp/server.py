@@ -88,7 +88,7 @@ def create_mcp_server(config_root: Path | None = None) -> FastMCP:
 
     @server.tool()
     async def session_create(name: str = "") -> str:
-        """Create a new sandbox session."""
+        """Create a new local notebook session."""
         from maribox.sandbox.session import SessionManager
 
         ctx = resolve_tool_context(config_root)
@@ -124,7 +124,7 @@ def create_mcp_server(config_root: Path | None = None) -> FastMCP:
 
     @server.tool()
     async def session_kill(session_id: str) -> str:
-        """Kill a session and its sandbox."""
+        """Kill a session and clean up its resources."""
         from maribox.sandbox.session import SessionManager
 
         ctx = resolve_tool_context(config_root)

@@ -11,14 +11,13 @@ from maribox.notebook.cell import Cell, CellId, CellOutput, CellStatus
 
 
 class MarimoRuntime:
-    """Manages a marimo kernel in headless mode inside a sandbox.
+    """Manages a marimo kernel in headless mode.
 
     Uses marimo's headless server mode for programmatic cell interaction.
     Falls back to subprocess-based execution if WebSocket API is unavailable.
     """
 
-    def __init__(self, sandbox_url: str, port_range: tuple[int, int] = (7000, 7100)) -> None:
-        self._sandbox_url = sandbox_url
+    def __init__(self, port_range: tuple[int, int] = (7000, 7100)) -> None:
         self._port_range = port_range
         self._process: subprocess.Popen[bytes] | None = None
         self._cells: dict[CellId, Cell] = {}
@@ -33,8 +32,8 @@ class MarimoRuntime:
 
         Returns the marimo kernel URL.
         """
-        # In a real implementation, this would start marimo inside the sandbox
-        # via the sandbox exec API. For now, use subprocess as fallback.
+        # In a real implementation, this would start marimo in headless mode.
+        # For now, use subprocess as fallback.
         notebook_path = Path("notebook.py")
         try:
             self._process = subprocess.Popen(
@@ -46,7 +45,7 @@ class MarimoRuntime:
             raise SessionError(f"Failed to start marimo kernel: {e}") from e
 
         # Return a placeholder URL (actual implementation would parse port from output)
-        return f"{self._sandbox_url}/marimo"
+        return "marimo://local"
 
     async def stop(self) -> None:
         """Stop the marimo kernel."""

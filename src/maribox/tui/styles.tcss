@@ -1,52 +1,70 @@
+/* maribox TUI theme — dark mode, OpenCode-inspired */
+
+/* ── Base ────────────────────────────────────────────────────── */
 Screen {
-    background: $surface;
+    background: #0d0f14;
+    color: #c8cdd8;
 }
 
+/* ── Header ──────────────────────────────────────────────────── */
 Header {
-    background: $primary;
+    background: #141720;
+    color: #6c8aff;
+    text-style: bold;
+    border-bottom: solid #2a2f3d;
 }
 
+/* ── Footer ──────────────────────────────────────────────────── */
 Footer {
-    background: $primary-background;
+    background: #141720;
+    color: #5c6370;
+    border-top: solid #2a2f3d;
 }
 
-#dashboard-grid {
-    layout: grid;
-    grid-size: 3 2;
-    grid-gutter: 1;
-    padding: 1;
+/* ── Scrollbar ───────────────────────────────────────────────── */
+scrollbar {
+    background: #141720;
+    color: #2a2f3d;
 }
 
-SessionCard {
-    background: $panel;
-    border: round $primary;
-    padding: 1 2;
-    margin: 1;
+scrollbar:hover {
+    color: #6c8aff;
 }
 
-.source-pane {
-    width: 1fr;
-    height: 1fr;
-    border: solid $primary-lighten-1;
+scrollbar.bar {
+    color: #2a2f3d;
 }
 
-.output-pane {
-    width: 1fr;
-    height: 1fr;
-    border: solid $success;
+/* ── Input ───────────────────────────────────────────────────── */
+TextArea {
+    background: #141720;
+    color: #c8cdd8;
+    border: none;
+    selection-background: #3a4f99;
 }
 
-.agent-pane {
-    height: auto;
-    max-height: 20;
-    border: solid $accent;
-    padding: 0 1;
+TextArea:focus {
+    border: none;
 }
 
-AgentFeed {
-    background: $surface;
-    border: solid $accent;
-    padding: 0 1;
-    height: auto;
-    max-height: 20;
+Input {
+    background: #141720;
+    color: #c8cdd8;
+    border: solid #2a2f3d;
+}
+
+Input:focus {
+    border: solid #6c8aff;
+}
+
+/* ── Static text defaults ────────────────────────────────────── */
+Static {
+    background: transparent;
+}
+
+/* ── Tooltips ────────────────────────────────────────────────── */
+Tooltip {
+    background: #1e2233;
+    border: solid #6c8aff;
+    color: #c8cdd8;
 }

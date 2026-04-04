@@ -1,1 +1,1 @@
-"""maribox sandbox — AIO Sandbox container management."""
+"""maribox sandbox — session lifecycle management."""

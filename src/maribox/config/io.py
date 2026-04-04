@@ -205,7 +205,6 @@ def _set_nested(config: MariboxConfig, key: str, value: str) -> None:
     section_name, field_name = parts
     section_map: dict[str, object] = {
         "maribox": config.maribox,
-        "sandbox": config.sandbox,
         "marimo": config.marimo,
         "tui": config.tui,
     }

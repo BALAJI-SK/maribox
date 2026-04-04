@@ -1,7 +1,17 @@
-"""TUI widgets — session card, cell panel, agent feed."""
+"""TUI widgets — message display, messages list, sidebar, input bar, welcome, status bar."""
 
-from maribox.tui.widgets.agent_feed import AgentFeed
-from maribox.tui.widgets.cell_panel import CellPanel
-from maribox.tui.widgets.session_card import SessionCard
+from maribox.tui.widgets.message_display import MessageWidget
+from maribox.tui.widgets.messages_list import MessagesList
+from maribox.tui.widgets.sidebar import Sidebar
+from maribox.tui.widgets.input_bar import InputBar
+from maribox.tui.widgets.welcome import WelcomeWidget
+from maribox.tui.widgets.status_bar import StatusBar
 
-__all__ = ["AgentFeed", "CellPanel", "SessionCard"]
+__all__ = [
+    "MessageWidget",
+    "MessagesList",
+    "Sidebar",
+    "InputBar",
+    "WelcomeWidget",
+    "StatusBar",
+]

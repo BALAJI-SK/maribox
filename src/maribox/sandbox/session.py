@@ -15,7 +15,6 @@ import tomli_w
 from maribox.config.io import load_config
 from maribox.config.resolution import resolve_config_root
 from maribox.exceptions import SessionError
-from maribox.sandbox.client import SandboxClient
 
 
 class SessionState(StrEnum):
@@ -37,7 +36,6 @@ class SessionInfo:
     status: SessionState
     provider: str
     model: str
-    sandbox_url: str = ""
     marimo_url: str = ""
     created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
@@ -54,10 +52,9 @@ class SessionManager:
     containing meta.toml, notebook.py, and run.log.
     """
 
-    def __init__(self, config_root: Path | None = None, sandbox_client: SandboxClient | None = None) -> None:
+    def __init__(self, config_root: Path | None = None) -> None:
         self._root = config_root or resolve_config_root()
         self._sessions_dir = self._root / "sessions"
-        self._client = sandbox_client or SandboxClient()
 
     @property
     def sessions_dir(self) -> Path:
@@ -77,7 +74,6 @@ class SessionManager:
             "status": info.status.value,
             "provider": info.provider,
             "model": info.model,
-            "sandbox_url": info.sandbox_url,
             "marimo_url": info.marimo_url,
             "created_at": info.created_at,
         }
@@ -102,18 +98,17 @@ class SessionManager:
             status=SessionState(data.get("status", "idle")),
             provider=data.get("provider", ""),
             model=data.get("model", ""),
-            sandbox_url=data.get("sandbox_url", ""),
             marimo_url=data.get("marimo_url", ""),
             created_at=data.get("created_at", ""),
         )
 
-    async def create_session(
+    def create_session(
         self,
         name: str | None = None,
         provider: str | None = None,
         model: str | None = None,
     ) -> SessionInfo:
-        """Create a new session with sandbox and marimo kernel."""
+        """Create a new local session with a marimo kernel."""
         session_id = generate_session_id()
 
         # Load defaults from config
@@ -125,22 +120,11 @@ class SessionManager:
         info = SessionInfo(
             id=session_id,
             name=name,
-            status=SessionState.CREATING,
+            status=SessionState.RUNNING,
             provider=provider,
             model=model,
         )
         self._write_meta(session_id, info)
-
-        # Provision sandbox
-        try:
-            sandbox_info = await self._client.create_sandbox()
-            info.sandbox_url = sandbox_info.url
-            info.status = SessionState.RUNNING
-            self._write_meta(session_id, info)
-        except Exception as e:
-            info.status = SessionState.ERROR
-            self._write_meta(session_id, info)
-            raise SessionError(f"Failed to create sandbox for session {session_id}: {e}") from e
 
         # Create empty notebook.py and run.log
         session_dir = self._session_dir(session_id)
@@ -149,7 +133,7 @@ class SessionManager:
 
         return info
 
-    async def list_sessions(self) -> list[SessionInfo]:
+    def list_sessions(self) -> list[SessionInfo]:
         """List all sessions."""
         if not self._sessions_dir.is_dir():
             return []
@@ -163,28 +147,25 @@ class SessionManager:
                     continue
         return sessions
 
-    async def get_session(self, session_id: str) -> SessionInfo:
+    def get_session(self, session_id: str) -> SessionInfo:
         """Get a single session's metadata."""
         return self._read_meta(session_id)
 
-    async def stop_session(self, session_id: str) -> None:
-        """Gracefully stop a session (sandbox + marimo kernel)."""
-        info = self._read_meta(session_id)
-        if info.sandbox_url:
-            await self._client.teardown(info.sandbox_url)
-        info.status = SessionState.STOPPED
-        info.sandbox_url = ""
-        self._write_meta(session_id, info)
-
-    async def kill_session(self, session_id: str) -> None:
-        """Force-terminate a session without cleanup."""
+    def stop_session(self, session_id: str) -> None:
+        """Gracefully stop a session (marimo kernel)."""
         info = self._read_meta(session_id)
         info.status = SessionState.STOPPED
-        info.sandbox_url = ""
         info.marimo_url = ""
         self._write_meta(session_id, info)
 
-    async def snapshot_session(self, session_id: str, out_path: Path | None = None) -> Path:
+    def kill_session(self, session_id: str) -> None:
+        """Force-terminate a session without cleanup."""
+        info = self._read_meta(session_id)
+        info.status = SessionState.STOPPED
+        info.marimo_url = ""
+        self._write_meta(session_id, info)
+
+    def snapshot_session(self, session_id: str, out_path: Path | None = None) -> Path:
         """Save notebook.py + run.log to a tarball archive."""
         info = self._read_meta(session_id)
         session_dir = self._session_dir(session_id)
@@ -200,18 +181,10 @@ class SessionManager:
 
         return out_path
 
-    async def remove_session(self, session_id: str) -> None:
-        """Remove a session directory and release sandbox."""
+    def remove_session(self, session_id: str) -> None:
+        """Remove a session directory."""
         session_dir = self._session_dir(session_id)
         if not session_dir.is_dir():
             raise SessionError(f"Session not found: {session_id}")
-
-        # Try to stop sandbox first
-        try:
-            info = self._read_meta(session_id)
-            if info.sandbox_url:
-                await self._client.teardown(info.sandbox_url)
-        except Exception:
-            pass  # Best-effort
 
         shutil.rmtree(session_dir)

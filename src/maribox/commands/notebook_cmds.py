@@ -1,7 +1,6 @@
 """Notebook CLI commands."""
 
 import asyncio
-import tomllib
 from pathlib import Path
 
 from rich import print as rprint
@@ -21,7 +20,7 @@ def _get_runtime(session_id: str) -> MarimoRuntime:
         raise SystemExit(1)
     with open(meta_path, "rb") as f:
         meta = tomllib.load(f)
-    return MarimoRuntime(sandbox_url=meta.get("sandbox_url", ""))
+    return MarimoRuntime()
 
 
 def _run(coro):

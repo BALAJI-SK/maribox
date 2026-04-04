@@ -7,12 +7,11 @@
 
 ## 1. Project overview
 
-`maribox` is a command-line and terminal UI application that spins up isolated
-marimo notebook sessions inside AIO Sandbox containers, orchestrates multiple
-AI agents (Anthropic, Google GLM, OpenAI) to collaboratively author notebook
-cells and UI code, executes the resulting notebooks, and manages all
-configuration under a `.maribox` directory in either the OS user path or the
-project root.
+`maribox` is a command-line and terminal UI application that spins up marimo
+notebook sessions, orchestrates multiple AI agents (Anthropic, Google GLM,
+OpenAI) to collaboratively author notebook cells and UI code, executes the
+resulting notebooks, and manages all configuration under a `.maribox` directory
+in either the OS user path or the project root.
 
 ---
 
@@ -22,8 +21,9 @@ project root.
   terminal without touching a browser.
 - Enable multi-agent collaboration where each agent specialises in a role
   (notebook authoring, UI generation, debugging, session management).
-- Provide a rich TUI that gives live visibility into running sessions, cell
-  outputs, and agent activity.
+- Provide an OpenCode-style TUI chat interface that gives live visibility into
+  running sessions, cell outputs, agent activity, and supports multi-line input
+  with command palette and model selection.
 - Expose the same surface as an MCP server so Claude Code, OpenCode, and VS
   Code extensions can drive maribox as a tool.
 - Store all configuration, credentials, and session state in a single
@@ -36,8 +36,8 @@ project root.
 
 - maribox is not a general-purpose notebook IDE. It does not replace the
   marimo browser UI; it wraps it.
-- maribox does not manage Python environments beyond delegating to the AIO
-  Sandbox container runtime.
+- maribox does not manage Python environments beyond the local session
+  directories.
 - maribox does not stream notebook outputs to external dashboards or BI tools.
 
 ---
@@ -51,7 +51,6 @@ project root.
 | CLI framework | Typer | Ergonomic, auto-generates `--help` |
 | TUI framework | Textual | Modern async TUI, first-class Python |
 | Notebook runtime | marimo (headless) | Reactive cell DAG, WebSocket API |
-| Sandbox runtime | AIO Sandbox (`agent-sandbox`) | Isolated containers, MCP-ready |
 | Secret storage | `python-keyring` | OS native (Keychain / libsecret / Win cred) |
 | Encryption | `cryptography` (AES-256-GCM) | Envelope-encrypt keys at rest |
 | Config format | TOML (`tomllib` / `tomli-w`) | Human-readable, stdlib in 3.11 |
@@ -79,7 +78,7 @@ maribox resolves the config root using the following priority (first match wins)
 ├── keys.enc             # AES-256-GCM encrypted key ciphertext + nonces
 ├── sessions/
 │   ├── <session-id>/
-│   │   ├── meta.toml    # Session metadata (name, created, status, sandbox URL)
+│   │   ├── meta.toml    # Session metadata (name, created, status)
 │   │   ├── notebook.py  # Generated marimo notebook source
 │   │   └── run.log      # Captured cell output log
 ├── agents/
@@ -92,14 +91,10 @@ maribox resolves the config root using the following priority (first match wins)
 ```toml
 [maribox]
 version = "1"
-default_provider = "anthropic"        # anthropic | google | openai | custom
+default_provider = "anthropic"        # anthropic | google | openai | glm | custom
 default_model = "claude-sonnet-4-6"
 auto_open_browser = false
 log_level = "info"                    # debug | info | warn | error
-
-[sandbox]
-base_url = ""                         # leave blank to auto-provision
-timeout_seconds = 300
 
 [marimo]
 port_range = [7000, 7100]             # ports maribox may bind
@@ -135,8 +130,8 @@ installed globally.
 
 ```
 maribox session new [--name NAME] [--provider PROVIDER] [--model MODEL]
-    Create a new sandbox + marimo session.
-    Outputs: session-id, sandbox URL, marimo kernel URL.
+    Create a new marimo session.
+    Outputs: session-id, status.
 
 maribox session list
     Table of all sessions: id, name, status, provider, created.
@@ -145,7 +140,7 @@ maribox session attach <session-id>
     Opens the TUI attached to an existing session.
 
 maribox session stop <session-id>
-    Gracefully shuts down the marimo kernel and sandbox.
+    Gracefully shuts down the marimo kernel.
 
 maribox session kill <session-id>
     Force-terminates without cleanup.
@@ -154,7 +149,7 @@ maribox session snapshot <session-id> [--out PATH]
     Saves notebook.py + run.log to a snapshot archive.
 
 maribox session rm <session-id>
-    Removes session directory and releases sandbox.
+    Removes session directory.
 ```
 
 ### 6.2 Notebook authoring
@@ -219,7 +214,7 @@ maribox agent run <role> --prompt PROMPT [--session SESSION_ID]
 ```
 maribox auth set <provider>
     Hidden prompt for API key; encrypts and stores in OS keychain + keys.enc.
-    Providers: anthropic | google | openai | custom
+    Providers: anthropic | google | openai | glm | custom
 
 maribox auth list
     Shows masked keys, models, and status per provider.
@@ -262,44 +257,63 @@ maribox serve --mcp [--transport stdio | sse]
 
 ```
 maribox tui [--session SESSION_ID]
-    Opens the full Textual TUI. Without a session ID, shows the
-    session picker dashboard.
+    Opens the OpenCode-style Textual TUI. Without a session ID, shows the
+    chat interface with a welcome screen.
 ```
 
 ---
 
 ## 7. TUI specification
 
-### 7.1 Screens
+The TUI follows an OpenCode-style design with a chat-centric interface,
+collapsible sidebar, multi-line input, and modal dialogs.
 
-| Screen | Description |
+### 7.1 Layout
+
+```
++--------------------------------------------------+
+|  Messages List (left)          | Sidebar (right)  |
+|  - User/Assistant messages     | - Session info   |
+|  - Tool call outputs           | - Files          |
+|  - Welcome screen              | - Agents         |
++--------------------------------------------------+
+|  > Input area (multi-line)                       |
+|    Enter to send, \+Enter for newline            |
++--------------------------------------------------+
+|  [Ctrl+? help] [status] ... [tokens] [model]     |
++--------------------------------------------------+
+```
+
+### 7.2 Screens and dialogs
+
+| Component | Description |
 |---|---|
-| Dashboard | Grid of all sessions — status badge, provider, last activity, quick-action buttons |
-| Session view | Split pane: notebook source left, cell output right, agent log bottom |
-| Agent monitor | Live feed of agent reasoning steps, tool calls, token usage per agent |
-| Auth manager | Provider list with key status; inline `auth set` wizard |
-| Config editor | TOML editor with live validation of `config.toml` / `project.toml` |
+| ChatScreen | Main interface with messages list, sidebar, and input bar |
+| HelpScreen | Modal overlay showing all key bindings |
+| SessionSwitcher | Modal for switching between conversation sessions |
+| CommandPalette | Filterable command list (Ctrl+K) |
+| ModelSelector | Provider/model selection with horizontal provider scroll |
+| QuitDialog | Quit confirmation modal |
 
-### 7.2 Key bindings (session view)
+### 7.3 Key bindings
 
 | Key | Action |
 |---|---|
-| `n` | New cell (prompts for code via input bar) |
-| `r` | Run selected cell |
-| `R` | Run all cells |
-| `e` | Edit selected cell |
-| `d` | Delete selected cell |
-| `f` | Run `debug fix` on last error |
-| `a` | Switch active agent role |
-| `p` | Switch provider for this session |
-| `s` | Save notebook |
-| `q` | Detach (session keeps running) |
-| `Q` | Quit and stop session |
-| `?` | Help overlay |
+| `Enter` | Send message |
+| `\+Enter` | Insert newline |
+| `Ctrl+K` | Command palette |
+| `Ctrl+L` | Toggle sidebar |
+| `Ctrl+S` | Session switcher |
+| `Ctrl+O` | Model selector |
+| `Ctrl+N` | New session |
+| `Ctrl+?` / `Ctrl+H` | Help overlay |
+| `Ctrl+C` | Quit confirmation |
+| `Escape` | Cancel / close dialog |
+| `PageUp/PageDown` | Scroll messages |
 
-### 7.3 Status indicators
+### 7.4 Status indicators
 
-- Session status: `running` (green) · `idle` (dim) · `error` (red) · `stopped` (gray)
+- Session status: `running` (green) · `idle` (yellow) · `error` (red) · `stopped` (dim)
 - Agent status: `thinking` (amber pulse) · `writing` (blue) · `idle` (dim)
 - Cell status: `ok` · `running` (spinner) · `error` · `stale` (dependency changed)
 
@@ -314,7 +328,7 @@ maribox tui [--session SESSION_ID]
 | `NotebookAgent` | Add, edit, run, and inspect cells | `cell_add`, `cell_run`, `cell_edit`, `notebook_show` |
 | `UIAgent` | Generate marimo UI widgets and layouts | `cell_add`, `marimo_ui_components_reference` |
 | `DebugAgent` | Capture errors, parse tracebacks, propose fixes | `cell_run`, `cell_edit`, `debug_last` |
-| `SessionAgent` | Lifecycle management of sandbox + marimo kernel | `session_new`, `session_stop`, `sandbox_exec` |
+| `SessionAgent` | Lifecycle management of sessions | `session_new`, `session_stop` |
 | `OrchestratorAgent` | Route user intent to the right sub-agent | delegates to all above |
 
 ### 8.2 Collaboration flow
@@ -322,7 +336,7 @@ maribox tui [--session SESSION_ID]
 ```
 User prompt
     └── OrchestratorAgent
-            ├── SessionAgent      →  ensure sandbox + kernel are live
+            ├── SessionAgent      →  ensure session is live
             ├── NotebookAgent     →  author Python cells
             ├── UIAgent           →  generate UI cells
             ├── DebugAgent        →  fix any errors after run
@@ -389,7 +403,6 @@ dependencies = [
   "typer>=0.12",
   "textual>=0.61",
   "marimo>=0.8",
-  "agent-sandbox>=0.3",
   "cryptography>=42",
   "keyring>=25",
   "tomli-w>=1.0",
@@ -440,27 +453,18 @@ uvx maribox serve --mcp
 }
 ```
 
-### 10.5 VS Code extension (`settings.json`)
-
-```json
-{
-  "maribox.mcpCommand": "uvx maribox serve --mcp",
-  "maribox.autoAttach": true
-}
-```
-
 ---
 
 ## 11. Functional requirements
 
 | ID | Requirement |
 |---|---|
-| F-01 | User can create a new session with `session new`; the command returns within 10 seconds on a local sandbox. |
+| F-01 | User can create a new session with `session new`; the command returns within 10 seconds. |
 | F-02 | User can add a Python cell via natural language prompt; the NotebookAgent converts it to valid marimo cell source. |
 | F-03 | User can run a cell and see streamed stdout/stderr in the TUI without leaving the terminal. |
 | F-04 | When a cell raises an exception, the DebugAgent automatically captures it and offers a fix without a separate command. |
 | F-05 | User can request a UI widget (chart, slider, table) and the UIAgent inserts valid marimo UI code as a new cell. |
-| F-06 | Multiple sessions can run concurrently; the TUI dashboard shows all of them with independent status. |
+| F-06 | Multiple sessions can run concurrently; the TUI shows all of them with independent status. |
 | F-07 | Session state (notebook source + run log) persists across CLI restarts. |
 | F-08 | `auth set` stores keys without echoing them; `auth list` shows only masked forms. |
 | F-09 | Provider can be switched per-project without touching global config. |
@@ -487,7 +491,6 @@ uvx maribox serve --mcp
 ## 13. Out-of-scope (v1)
 
 - Notebook diffing or collaborative multi-user editing.
-- Custom kernel images beyond the default AIO Sandbox container.
 - Cloud-hosted session persistence (S3, GCS, etc.).
 - Notebook export to Jupyter `.ipynb` format.
 - GUI application (Electron, Tauri, etc.).

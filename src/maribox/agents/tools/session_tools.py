@@ -9,7 +9,7 @@ def create_session_tool() -> dict[str, Any]:
     """Return a tool definition for creating a new session."""
     return {
         "name": "create_session",
-        "description": "Create a new isolated notebook session with a sandbox container.",
+        "description": "Create a new isolated local notebook session.",
         "parameters": {
             "type": "object",
             "properties": {

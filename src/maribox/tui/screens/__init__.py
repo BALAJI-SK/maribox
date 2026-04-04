@@ -1,7 +1,5 @@
-"""TUI screens — dashboard, session view, agent monitor."""
+"""TUI screens — chat (main interface)."""
 
-from maribox.tui.screens.agent_monitor import AgentMonitorScreen
-from maribox.tui.screens.dashboard import DashboardScreen
-from maribox.tui.screens.session_view import SessionViewScreen
+from maribox.tui.screens.chat import ChatScreen
 
-__all__ = ["AgentMonitorScreen", "DashboardScreen", "SessionViewScreen"]
+__all__ = ["ChatScreen"]

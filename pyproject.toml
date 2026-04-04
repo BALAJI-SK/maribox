@@ -16,7 +16,6 @@ dependencies = [
   "typer>=0.12",
   "textual>=0.61",
   "marimo>=0.8",
-  "agent-sandbox>=0.0.30",
   "cryptography>=42",
   "keyring>=25",
   "tomli-w>=1.0",

@@ -1,13 +1,13 @@
 # maribox
 
-Multi-session marimo notebook orchestrator with collaborative AI agents. Build and run marimo notebooks from your terminal with isolated sandbox environments and multi-provider AI assistance.
+Multi-session marimo notebook orchestrator with collaborative AI agents. Build and run marimo notebooks from your terminal with multi-provider AI assistance and an OpenCode-style chat interface.
 
 ## Features
 
-- **Isolated sessions** — each notebook runs in its own sandbox container with an independent marimo kernel
+- **OpenCode-style TUI** — full terminal chat interface with messages, sidebar, command palette, and model selector
 - **Multi-agent AI** — specialized agents for notebook authoring, UI generation, debugging, and session management (Anthropic, Google, OpenAI, GLM 5.1)
 - **Reactive cell DAG** — automatic variable dependency tracking; edit a cell and see downstream impacts instantly
-- **Rich TUI** — full terminal UI with dashboard, session view, and agent activity monitor
+- **Session management** — create, list, attach, snapshot, and manage notebook sessions from the CLI
 - **MCP server** — expose all commands as tools for Claude Code, OpenCode, or VS Code integration
 - **Encrypted secrets** — API keys stored with AES-256-GCM encryption in your OS keychain
 - **Zero-install** — run directly with `uvx maribox`
@@ -87,7 +87,7 @@ maribox glm                      # One-command GLM 5.1 setup
 ### Sessions
 
 ```bash
-maribox session new --name "analysis"     # Create sandbox + marimo session
+maribox session new --name "analysis"     # Create a new session
 maribox session list                      # Show all sessions
 maribox session attach <session-id>       # Open TUI attached to session
 maribox session stop <session-id>         # Graceful shutdown
@@ -141,16 +141,39 @@ maribox agent run notebook --prompt "Create a data loading cell" --session <id>
 ### TUI
 
 ```bash
-maribox tui                                # Open dashboard
+maribox tui                                # Open OpenCode-style chat interface
 maribox tui --session <session-id>         # Open attached to session
 ```
 
+The TUI provides an OpenCode-style interface:
+
+```
++--------------------------------------------------+
+|  Messages List (left)          | Sidebar (right)  |
+|  - User/Assistant messages     | - Session info   |
+|  - Tool call outputs           | - Files          |
+|  - Markdown rendering          | - Agents         |
++--------------------------------------------------+
+|  > Input area (multi-line)                       |
+|    Enter to send, \+Enter for newline            |
++--------------------------------------------------+
+|  [Ctrl+? help] [status] ... [tokens] [model]     |
++--------------------------------------------------+
+```
+
 Key bindings inside the TUI:
+
 | Key | Action |
 |-----|--------|
-| `d` | Dashboard |
-| `a` | Agent monitor |
-| `q` | Quit |
+| `Enter` | Send message |
+| `\+Enter` | Insert newline |
+| `Ctrl+K` | Command palette |
+| `Ctrl+L` | Toggle sidebar |
+| `Ctrl+O` | Model selector |
+| `Ctrl+S` | Session switcher |
+| `Ctrl+N` | New session |
+| `Ctrl+?` | Help overlay |
+| `Ctrl+C` | Quit |
 
 ### MCP Server
 
@@ -181,13 +204,18 @@ maribox/
 │   ├── config/             # 3-tier config resolution (env > project > global)
 │   ├── security/           # AES-256-GCM encryption, keyring, log masking
 │   ├── auth/               # API key management (set, rotate, revoke)
-│   ├── sandbox/            # Sandbox client + session lifecycle
+│   ├── sandbox/            # Session lifecycle management
 │   ├── notebook/           # Cell DAG, marimo runtime, export/import
 │   ├── agents/             # Multi-agent system (orchestrator + specialists)
 │   ├── commands/           # CLI command implementations
 │   ├── mcp/                # FastMCP server with 25 tools
-│   └── tui/                # Textual TUI (screens + widgets)
-├── tests/                  # 146 tests (unit + integration)
+│   └── tui/                # OpenCode-style Textual TUI
+│       ├── app.py          # MariboxApp
+│       ├── screens/chat.py # ChatScreen (main interface)
+│       ├── widgets/        # MessagesList, Sidebar, InputBar, StatusBar
+│       ├── dialogs/        # Help, SessionSwitcher, CommandPalette, ModelSelector
+│       └── message.py      # ChatMessage, Conversation data models
+├── tests/                  # Unit + integration tests
 └── docs/planning/          # Phase-by-phase design documents
 ```
 
@@ -198,7 +226,7 @@ OrchestratorAgent — routes user intent to specialized agents:
   ├── NotebookAgent  — cell CRUD, code generation, execution
   ├── UIAgent        — marimo UI widget generation (sliders, tables, charts)
   ├── DebugAgent     — error analysis, traceback parsing, fix proposals
-  └── SessionAgent   — sandbox + marimo kernel lifecycle
+  └── SessionAgent   — session lifecycle management
 ```
 
 Each agent has independent model/provider config in `agents/profiles.toml`.
@@ -232,10 +260,6 @@ default_provider = "anthropic"     # anthropic | google | openai | glm | custom
 default_model = "claude-sonnet-4-6"
 log_level = "info"
 
-[sandbox]
-base_url = ""                      # leave blank to auto-provision
-timeout_seconds = 300
-
 [marimo]
 port_range = [7000, 7100]
 headless = true
@@ -265,7 +289,7 @@ debug = { model = "gpt-4o", provider = "openai" }
 ```bash
 uv sync                                    # Install dependencies
 ruff check .                               # Lint
-pytest                                     # Run 146 tests
+pytest                                     # Run all tests
 pytest --cov=maribox                       # Coverage report
 pytest tests/notebook/test_dag.py          # Single test file
 pytest tests/agents/test_profile.py::TestResolveModel::test_glm  # Single test

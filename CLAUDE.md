@@ -4,16 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project summary
 
-maribox is a CLI and TUI application that orchestrates isolated marimo notebook sessions inside AIO Sandbox containers, with multi-agent AI collaboration (Anthropic, Google, OpenAI). Distributed as a `uv` tool. Users build and run apps inside sandboxed environments via AIO Sandbox MCP servers.
+maribox is a CLI and TUI application that orchestrates marimo notebook sessions with multi-agent AI collaboration (Anthropic, Google, OpenAI). Distributed as a `uv` tool. The TUI follows an OpenCode-style chat interface for AI-assisted notebook development.
 
 ## Tech stack
 
 - **Python 3.11+** — `pyproject.toml` with `uv` packaging
 - **Google ADK** (`google-adk`) — multi-agent orchestration and tool routing
 - **Typer** — CLI framework
-- **Textual** — async TUI framework
+- **Textual** — async TUI framework (OpenCode-style chat interface)
 - **marimo** (headless) — notebook runtime with reactive cell DAG and WebSocket API
-- **AIO Sandbox** — isolated containers providing secure code execution environments; accessed via MCP server protocol. Each sandbox is an ephemeral, containerized environment where agents can execute code, manage files, and install packages. Similar in concept to [E2B](https://github.com/e2b-dev/E2B) (cloud sandboxes for AI agents with Python/JS SDKs).
 - **MCP SDK** (`mcp`) — stdio transport for Claude Code / OpenCode integration
 - **cryptography** (AES-256-GCM) + **keyring** — encrypted API key storage
 - **TOML** (`tomllib` / `tomli-w`) — all configuration files
@@ -45,6 +44,44 @@ uv run maribox serve --mcp --transport stdio
 
 ## Architecture
 
+### TUI — OpenCode-style chat interface
+
+The TUI (`maribox tui`) follows OpenCode's design with:
+
+```
+┌──────────────────────────────────────────────────┐
+│  Messages List (left)          │ Sidebar (right)  │
+│  - User/Assistant messages     │ - Session info   │
+│  - Tool call outputs           │ - Files          │
+│  - Markdown rendering          │ - Agents         │
+├──────────────────────────────────────────────────┤
+│  > Input area (multi-line)                       │
+│    Enter to send · \+Enter for newline            │
+├──────────────────────────────────────────────────┤
+│  [Ctrl+? help] [status] ... [tokens] [model]     │
+└──────────────────────────────────────────────────┘
+```
+
+**Key bindings:**
+- `Enter` — Send message
+- `\+Enter` — Insert newline
+- `Ctrl+K` — Command palette
+- `Ctrl+L` — Toggle sidebar
+- `Ctrl+S` — Session switcher
+- `Ctrl+O` — Model selector
+- `Ctrl+N` — New session
+- `Ctrl+?` — Help overlay
+- `Ctrl+C` — Quit
+
+**TUI file structure:**
+- `tui/app.py` — MariboxApp (Textual App)
+- `tui/screens/chat.py` — ChatScreen (main interface)
+- `tui/widgets/` — MessagesList, Sidebar, InputBar, StatusBar, WelcomeWidget, MessageWidget
+- `tui/dialogs/` — HelpScreen, SessionSwitcher, CommandPalette, ModelSelector, QuitDialog
+- `tui/message.py` — ChatMessage, Conversation, MessageRole data models
+- `tui/styles.py` — Theme colors and CSS constants
+- `tui/styles.tcss` — Textual CSS theme file
+
 ### Session management — session IDs
 
 Every session is identified by a unique **session-id** (stored in `.maribox/sessions/<session-id>/`). All session operations accept a session-id:
@@ -54,25 +91,14 @@ maribox session attach <session-id>   # Open TUI attached to existing session
 maribox session stop <session-id>     # Gracefully shut down session
 maribox session kill <session-id>     # Force-terminate without cleanup
 maribox session snapshot <session-id> # Save notebook + logs to archive
-maribox session rm <session-id>       # Remove session and release sandbox
+maribox session rm <session-id>       # Remove session directory
 maribox cell add <session-id>         # Add cell to a specific session
 maribox cell run <session-id>         # Run cells in a specific session
 maribox ui generate <session-id>      # Generate UI in a specific session
 maribox debug last <session-id>       # Debug errors in a specific session
 ```
 
-Multiple sessions run concurrently — the TUI dashboard shows all sessions with independent status. Session state (notebook source + run log) persists across CLI restarts.
-
-### AIO Sandbox integration
-
-maribox uses AIO Sandbox MCP servers to build and run apps in isolated containers:
-
-- Each `session new` provisions a fresh AIO Sandbox container with a marimo kernel
-- Agents interact with sandboxes through MCP tools (`sandbox_exec`, file operations, package installation)
-- The `SessionAgent` manages sandbox lifecycle (create, health-check, teardown)
-- Sandboxes are ephemeral — state is persisted to `.maribox/sessions/<id>/` on the host
-- The sandbox base URL is configurable in `config.toml` (`[sandbox] base_url`); leave blank to auto-provision
-- Sandbox timeout defaults to 300 seconds (`[sandbox] timeout_seconds`)
+Sessions are managed locally — each session has its own directory with `meta.toml`, `notebook.py`, and `run.log`. Multiple sessions can run concurrently.
 
 ### Config resolution (`.maribox/` directory)
 
@@ -84,7 +110,7 @@ Key files: `config.toml` (global settings), `project.toml` (per-project override
 
 ```
 OrchestratorAgent → routes user intent to specialized sub-agents:
-  ├── SessionAgent   — sandbox + marimo kernel lifecycle (uses AIO Sandbox MCP tools)
+  ├── SessionAgent   — session lifecycle management
   ├── NotebookAgent  — cell CRUD and execution
   ├── UIAgent        — marimo UI widget generation
   └── DebugAgent     — error capture, traceback analysis, fix proposals
@@ -118,7 +144,6 @@ Each agent has independent model/provider config in `agents/profiles.toml`, over
 - Log output must mask patterns matching `sk-ant-*`, `AIza*`, `sk-*`
 - `keys.enc` must be in `.gitignore`
 - Key material is zeroed with `ctypes` immediately after use
-- Sandbox containers are isolated — no host filesystem or network access unless explicitly granted
 
 ## Code quality gates
 

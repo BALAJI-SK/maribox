@@ -10,10 +10,6 @@ DEFAULT_CONFIG: dict[str, dict[str, object]] = {
         "auto_open_browser": False,
         "log_level": "info",
     },
-    "sandbox": {
-        "base_url": "",
-        "timeout_seconds": 300,
-    },
     "marimo": {
         "port_range": [7000, 7100],
         "headless": True,

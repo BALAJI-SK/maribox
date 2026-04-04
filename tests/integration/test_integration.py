@@ -60,10 +60,10 @@ class TestAuthWorkflow:
 
 
 class TestSessionWorkflow:
-    """Test session creation with notebook export (without real sandbox)."""
+    """Test session creation with notebook export."""
 
     def test_session_notebook_roundtrip(self, tmp_path: Path) -> None:
-        # Simulate a session directory (without creating a real sandbox)
+        # Simulate a session directory
         session_id = "test-session-1"
         session_dir = tmp_path / "sessions" / session_id
         session_dir.mkdir(parents=True)
@@ -132,7 +132,7 @@ class TestRuntimeWorkflow:
 
     @pytest.mark.asyncio
     async def test_add_and_run_cell(self) -> None:
-        runtime = MarimoRuntime(sandbox_url="http://localhost:8000")
+        runtime = MarimoRuntime()
         cell = await runtime.add_cell("x = 42")
         assert cell.code == "x = 42"
 
@@ -141,7 +141,7 @@ class TestRuntimeWorkflow:
 
     @pytest.mark.asyncio
     async def test_edit_cell(self) -> None:
-        runtime = MarimoRuntime(sandbox_url="")
+        runtime = MarimoRuntime()
         cell = await runtime.add_cell("x = 1")
         edited = await runtime.edit_cell(cell.id, "x = 2")
         assert edited.code == "x = 2"
@@ -149,7 +149,7 @@ class TestRuntimeWorkflow:
 
     @pytest.mark.asyncio
     async def test_remove_cell(self) -> None:
-        runtime = MarimoRuntime(sandbox_url="")
+        runtime = MarimoRuntime()
         cell = await runtime.add_cell("x = 1")
         await runtime.remove_cell(cell.id)
         cells = await runtime.list_cells()
@@ -157,7 +157,7 @@ class TestRuntimeWorkflow:
 
     @pytest.mark.asyncio
     async def test_list_and_get_cells(self) -> None:
-        runtime = MarimoRuntime(sandbox_url="")
+        runtime = MarimoRuntime()
         c1 = await runtime.add_cell("a = 1")
         await runtime.add_cell("b = 2")
         cells = await runtime.list_cells()
@@ -168,7 +168,7 @@ class TestRuntimeWorkflow:
 
     @pytest.mark.asyncio
     async def test_get_errors(self) -> None:
-        runtime = MarimoRuntime(sandbox_url="")
+        runtime = MarimoRuntime()
         await runtime.add_cell("x = 1")
         errors = await runtime.get_errors()
         assert len(errors) == 0

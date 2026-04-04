@@ -8,20 +8,6 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "agent-sandbox"
-version = "0.0.30"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "httpx", extra = ["socks"] },
-    { name = "pydantic" },
-    { name = "volcengine-python-sdk" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/32/5c/94d924db07da1e4f0925dd593939e652bb45d60cc749756bcce2d302817d/agent_sandbox-0.0.30.tar.gz", hash = "sha256:29677beca8fabf9ee1ec7c0e5637d15ba37a7e1f58cc8deb82611772fdec43bb", size = 111818, upload-time = "2026-03-24T09:38:19.299Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/5b/bc/b83d625cf8cb9611c379b452d60da47a26fb7ccfa6c56c63cde4e45214c2/agent_sandbox-0.0.30-py2.py3-none-any.whl", hash = "sha256:bbcca45a202abb7cd01162473f01f3218de5037745ef4fa539e617a3cc973896", size = 243633, upload-time = "2026-03-24T09:38:17.8Z" },
-]
-
-[[package]]
 name = "aiohappyeyeballs"
 version = "2.6.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1624,11 +1610,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl", hash = "sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad", size = 73517, upload-time = "2024-12-06T15:37:21.509Z" },
 ]
 
-[package.optional-dependencies]
-socks = [
-    { name = "socksio" },
-]
-
 [[package]]
 name = "httpx-sse"
 version = "0.4.3"
@@ -2111,7 +2092,6 @@ name = "maribox"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "agent-sandbox" },
     { name = "argon2-cffi" },
     { name = "cryptography" },
     { name = "google-adk" },
@@ -2139,7 +2119,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "agent-sandbox", specifier = ">=0.0.30" },
     { name = "argon2-cffi", specifier = ">=23.1" },
     { name = "cryptography", specifier = ">=42" },
     { name = "google-adk", specifier = ">=0.5" },
@@ -3816,15 +3795,6 @@ wheels = [
 ]
 
 [[package]]
-name = "socksio"
-version = "1.0.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f8/5c/48a7d9495be3d1c651198fd99dbb6ce190e2274d0f28b9051307bdec6b85/socksio-1.0.0.tar.gz", hash = "sha256:f88beb3da5b5c38b9890469de67d0cb0f9d494b78b106ca1845f96c10b91c4ac", size = 19055, upload-time = "2020-04-17T15:50:34.664Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/37/c3/6eeb6034408dac0fa653d126c9204ade96b819c936e136c5e8a6897eee9c/socksio-1.0.0-py3-none-any.whl", hash = "sha256:95dc1f15f9b34e8d7b16f06d74b8ccf48f609af32ab33c608d08761c5dcbb1f3", size = 12763, upload-time = "2020-04-17T15:50:31.878Z" },
-]
-
-[[package]]
 name = "sqlalchemy"
 version = "2.0.48"
 source = { registry = "https://pypi.org/simple" }
@@ -4211,21 +4181,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e3/ad/4a96c425be6fb67e0621e62d86c402b4a17ab2be7f7c055d9bd2f638b9e2/uvicorn-0.42.0.tar.gz", hash = "sha256:9b1f190ce15a2dd22e7758651d9b6d12df09a13d51ba5bf4fc33c383a48e1775", size = 85393, upload-time = "2026-03-16T06:19:50.077Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0a/89/f8827ccff89c1586027a105e5630ff6139a64da2515e24dafe860bd9ae4d/uvicorn-0.42.0-py3-none-any.whl", hash = "sha256:96c30f5c7abe6f74ae8900a70e92b85ad6613b745d4879eb9b16ccad15645359", size = 68830, upload-time = "2026-03-16T06:19:48.325Z" },
-]
-
-[[package]]
-name = "volcengine-python-sdk"
-version = "5.0.22"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "certifi" },
-    { name = "python-dateutil" },
-    { name = "six" },
-    { name = "urllib3" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/0c/c5/dff42ff9833aae35f89d71ed74a5a8c35b6283ed9ebe5e2a38f305f8bf79/volcengine_python_sdk-5.0.22.tar.gz", hash = "sha256:729004055d16331836264e0fea937f046987e18234de1de1667869fad8a1f570", size = 8363805, upload-time = "2026-04-02T12:08:28.724Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/0d/c3/3997c6abf7c3babe598342ee8e5ca3944b52f3de344a5dba12fc3c26ce26/volcengine_python_sdk-5.0.22-py2.py3-none-any.whl", hash = "sha256:69ba14cb6a5f4ca99b8ef0bc2f1d755ffb47f1be298ae34a5640839f73a45ae9", size = 32906348, upload-time = "2026-04-02T12:08:22.47Z" },
 ]
 
 [[package]]
