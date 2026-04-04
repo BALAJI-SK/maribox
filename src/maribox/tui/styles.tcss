@@ -22,17 +22,13 @@ Footer {
 }
 
 /* ── Scrollbar ───────────────────────────────────────────────── */
-scrollbar {
+ScrollableContainer > .scrollbar {
     background: #141720;
     color: #2a2f3d;
 }
 
-scrollbar:hover {
+ScrollableContainer > .scrollbar:hover {
     color: #6c8aff;
-}
-
-scrollbar.bar {
-    color: #2a2f3d;
 }
 
 /* ── Input ───────────────────────────────────────────────────── */

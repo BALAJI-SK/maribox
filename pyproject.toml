@@ -7,7 +7,7 @@ packages = ["src/maribox"]
 
 [project]
 name = "maribox"
-version = "0.1.0"
+version = "0.1.1"
 description = "Multi-session marimo notebook orchestrator with collaborative AI agents"
 requires-python = ">=3.11"
 dependencies = [
